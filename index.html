@@ -9,23 +9,72 @@
       padding: 0;
       font-family: Arial, sans-serif;
     }
+
     h1 {
       text-align: center;
-      padding: 20px;
+      padding: 10px;
     }
+
+    #refresh-button {
+      margin: 0 auto;
+      display: block;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+
+    #container {
+      display: flex;
+      height: calc(100vh - 150px); /* Adjust based on header and button height */
+    }
+
+    #sidebar {
+      width: 25%;
+      overflow-y: auto;
+      padding: 10px;
+      box-sizing: border-box;
+      background-color: #f9f9f9;
+    }
+
     #map {
-      height: calc(100vh - 80px); /* Full viewport height minus header */
-      width: 100%;
+      width: 75%;
+    }
+
+    #places-list {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    #places-list li {
+      margin-bottom: 15px;
+    }
+
+    #places-list li:hover {
+      background-color: #eaeaea;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <h1>Nearby Restaurants</h1>
-  <div id="map"></div>
+  <button id="refresh-button">Refresh Location</button>
+  <div id="container">
+    <div id="sidebar">
+      <h2>Restaurants within 100 meters</h2>
+      <ul id="places-list"></ul>
+    </div>
+    <div id="map"></div>
+  </div>
 
   <!-- Include the Google Maps JavaScript API -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCK2tZwA7IQM_uKCg527Sr2hyLd8eSo4QM&libraries=places"></script>
   <script>
+    // JavaScript code goes here
+
+    // Variables to store map and markers
+    let map;
+    let markers = [];
+    let userMarker;
+
     // Check if Geolocation is supported
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(initMap, showError);
@@ -51,8 +100,6 @@
       }
     }
 
-    let map;
-
     function initMap(position) {
       const userLocation = {
         lat: position.coords.latitude,
@@ -66,7 +113,7 @@
       });
 
       // Add a marker for the user's location
-      new google.maps.Marker({
+      userMarker = new google.maps.Marker({
         position: userLocation,
         map: map,
         title: "Your Location",
@@ -82,14 +129,19 @@
 
       const request = {
         location: location,
-        radius: '1000', // Search within 1000 meters
+        radius: '100', // Search within 100 meters
         type: ['restaurant'],
       };
 
       service.nearbySearch(request, (results, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-          results.forEach((place) => {
+          // Clear existing markers and list
+          clearMarkers();
+          clearPlacesList();
+
+          results.forEach((place, index) => {
             createMarker(place);
+            addPlaceToList(place, index);
           });
         } else {
           console.error('PlacesService failed due to: ' + status);
@@ -107,6 +159,8 @@
         title: place.name,
       });
 
+      markers.push(marker);
+
       const infoWindow = new google.maps.InfoWindow({
         content: `<strong>${place.name}</strong><br>${place.vicinity}`,
       });
@@ -114,6 +168,63 @@
       marker.addListener('click', () => {
         infoWindow.open(map, marker);
       });
+    }
+
+    function clearMarkers() {
+      markers.forEach((marker) => {
+        marker.setMap(null);
+      });
+      markers = [];
+    }
+
+    function clearPlacesList() {
+      const placesList = document.getElementById('places-list');
+      placesList.innerHTML = '';
+    }
+
+    function addPlaceToList(place, index) {
+      const placesList = document.getElementById('places-list');
+      const listItem = document.createElement('li');
+      listItem.innerHTML = `<strong>${place.name}</strong><br>${place.vicinity}`;
+      listItem.addEventListener('click', () => {
+        map.setCenter(place.geometry.location);
+        map.setZoom(18);
+      });
+      placesList.appendChild(listItem);
+    }
+
+    // Refresh Location Button Event Listener
+    document.getElementById('refresh-button').addEventListener('click', () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(updateLocation, showError);
+      } else {
+        alert("Geolocation is not supported by this browser.");
+      }
+    });
+
+    function updateLocation(position) {
+      const userLocation = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      };
+
+      // Center the map on the new location
+      map.setCenter(userLocation);
+
+      // Update the user's location marker
+      if (userMarker) {
+        userMarker.setPosition(userLocation);
+      } else {
+        userMarker = new google.maps.Marker({
+          position: userLocation,
+          map: map,
+          title: "Your Location",
+          icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+        });
+      }
+
+      // Search for nearby restaurants
+      findNearbyRestaurants(userLocation);
     }
   </script>
 </body>
