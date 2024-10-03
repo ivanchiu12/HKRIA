@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Nearby Restaurants Map</title>
+  <style>
+    /* CSS styles go here */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    h1 {
+      text-align: center;
+      padding: 20px;
+    }
+    #map {
+      height: calc(100vh - 80px); /* Full viewport height minus header */
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Nearby Restaurants</h1>
+  <div id="map"></div>
+
+  <!-- Include the Google Maps JavaScript API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCK2tZwA7IQM_uKCg527Sr2hyLd8eSo4QM&libraries=places"></script>
+  <script>
+    // Check if Geolocation is supported
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(initMap, showError);
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+
+    function showError(error) {
+      console.error('Error getting location:', error);
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          alert("User denied the request for Geolocation.");
+          break;
+        case error.POSITION_UNAVAILABLE:
+          alert("Location information is unavailable.");
+          break;
+        case error.TIMEOUT:
+          alert("The request to get user location timed out.");
+          break;
+        case error.UNKNOWN_ERROR:
+          alert("An unknown error occurred.");
+          break;
+      }
+    }
+
+    let map;
+
+    function initMap(position) {
+      const userLocation = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      };
+
+      // Initialize the map centered on the user's location
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: userLocation,
+        zoom: 15,
+      });
+
+      // Add a marker for the user's location
+      new google.maps.Marker({
+        position: userLocation,
+        map: map,
+        title: "Your Location",
+        icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+      });
+
+      // Search for nearby restaurants
+      findNearbyRestaurants(userLocation);
+    }
+
+    function findNearbyRestaurants(location) {
+      const service = new google.maps.places.PlacesService(map);
+
+      const request = {
+        location: location,
+        radius: '1000', // Search within 1000 meters
+        type: ['restaurant'],
+      };
+
+      service.nearbySearch(request, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+          results.forEach((place) => {
+            createMarker(place);
+          });
+        } else {
+          console.error('PlacesService failed due to: ' + status);
+          alert('Failed to find nearby restaurants.');
+        }
+      });
+    }
+
+    function createMarker(place) {
+      if (!place.geometry || !place.geometry.location) return;
+
+      const marker = new google.maps.Marker({
+        map: map,
+        position: place.geometry.location,
+        title: place.name,
+      });
+
+      const infoWindow = new google.maps.InfoWindow({
+        content: `<strong>${place.name}</strong><br>${place.vicinity}`,
+      });
+
+      marker.addListener('click', () => {
+        infoWindow.open(map, marker);
+      });
+    }
+  </script>
+</body>
+</html>
