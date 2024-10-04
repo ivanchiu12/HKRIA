@@ -11,19 +11,55 @@
   <!-- Link to your script.js file -->
   <script src="script.js" defer></script>
 
-  <!-- Basic styling -->
+  <!-- Styles -->
   <style>
     body {
       font-family: Arial, sans-serif;
+      margin: 0;
+    }
+    #container {
+      display: flex;
+      height: 100vh;
+    }
+    #sidebar {
+      width: 300px;
+      overflow-y: auto;
+      background-color: #f7f7f7;
+      padding: 10px;
+      box-sizing: border-box;
     }
     #map {
-      height: 80vh;
-      width: 100%;
+      flex: 1;
+    }
+    .restaurant-item {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+    }
+    .restaurant-item:hover {
+      background-color: #eaeaea;
+    }
+    .restaurant-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .restaurant-address {
+      font-size: 0.9em;
+      color: #555;
+    }
+    .error-message {
+      color: red;
+      padding: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>Restaurant Map</h1>
-  <div id="map"></div>
+  <div id="container">
+    <div id="sidebar">
+      <h2>Nearby Restaurants</h2>
+      <div id="restaurant-list"></div>
+    </div>
+    <div id="map"></div>
+  </div>
 </body>
 </html>
