@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Google Maps JavaScript API -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCK2tZwA7IQM_uKCg527Sr2hyLd8eSo4QM"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCK2tZwA7IQM_uKCg527Sr2hyLd8eSo4QM" defer></script>
 
   <!-- Link to your script.js file -->
   <script src="script.js" defer></script>
@@ -23,10 +23,16 @@
     }
     #sidebar {
       width: 300px;
+      max-width: 80%;
       overflow-y: auto;
       background-color: #f7f7f7;
       padding: 10px;
       box-sizing: border-box;
+      transition: transform 0.3s ease;
+      transform: translateX(0);
+    }
+    #sidebar.collapsed {
+      transform: translateX(-100%);
     }
     #map {
       flex: 1;
@@ -51,11 +57,41 @@
       color: red;
       padding: 10px;
     }
+    /* Toggle button styles */
+    #toggle-button {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1;
+      background-color: #fff;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    /* Adjustments for small screens */
+    @media (max-width: 768px) {
+      #container {
+        flex-direction: column;
+      }
+      #sidebar {
+        position: absolute;
+        height: 100%;
+        z-index: 2;
+      }
+      #map {
+        flex: none;
+        height: 100vh;
+      }
+    }
   </style>
 </head>
 <body>
   <div id="container">
-    <div id="sidebar">
+    <button id="toggle-button">☰ Menu</button>
+    <div id="sidebar" class="collapsed">
       <h2>Nearby Restaurants</h2>
       <div id="restaurant-list"></div>
     </div>
