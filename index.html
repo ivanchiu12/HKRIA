@@ -1,116 +1,29 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Restaurant Locations</title>
-    <meta charset="utf-8">
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCK2tZwA7IQM_uKCg527Sr2hyLd8eSo4QM"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-  </head>
-  <body>
-    <h3>Restaurant Locations</h3>
-    <input type="file" id="input-excel" accept=".xlsx, .xls" />
-    <div id="map" style="height: 500px; width: 100%;"></div>
-    <script>
-      document.getElementById('input-excel').addEventListener('change', handleFileSelect, false);
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Restaurant Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-      function handleFileSelect(event) {
-        var file = event.target.files[0];
-        if (file) {
-          readExcelFile(file);
-        } else {
-          alert("No file selected.");
-        }
-      }
+  <!-- Google Maps JavaScript API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCK2tZwA7IQM_uKCg527Sr2hyLd8eSo4QM"></script>
 
-      function readExcelFile(file) {
-        var reader = new FileReader();
-        reader.onload = function (e) {
-          var data = e.target.result;
-          var workbook = XLSX.read(data, { type: 'binary' });
+  <!-- Link to your script.js file -->
+  <script src="script.js" defer></script>
 
-          var firstSheetName = workbook.SheetNames[0];
-          var worksheet = workbook.Sheets[firstSheetName];
-
-          var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-          var restaurantData = parseExcelData(jsonData);
-
-          initMap(restaurantData);
-        };
-        reader.onerror = function (ex) {
-          console.error(ex);
-        };
-
-        reader.readAsBinaryString(file);
-      }
-
-      function parseExcelData(jsonData) {
-        var restaurantData = [];
-
-        for (var i = 1; i < jsonData.length; i++) {
-          var row = jsonData[i];
-          var name = row[0];
-          var address = row[1];
-          var timestamp = row[2];
-
-          restaurantData.push({
-            name: name,
-            address: address,
-            timestamp: timestamp,
-          });
-        }
-
-        return restaurantData;
-      }
-
-      function initMap(restaurantData) {
-        var centerLocation = { lat: 22.3193, lng: 114.1694 }; // Centered on Hong Kong
-        var map = new google.maps.Map(document.getElementById("map"), {
-          zoom: 12,
-          center: centerLocation,
-        });
-
-        var geocoder = new google.maps.Geocoder();
-        var bounds = new google.maps.LatLngBounds();
-
-        function geocodeNext(index) {
-          if (index >= restaurantData.length) {
-            map.fitBounds(bounds);
-            return;
-          }
-
-          var restaurant = restaurantData[index];
-
-          geocoder.geocode({ address: restaurant.address }, function (results, status) {
-            if (status === 'OK') {
-              var location = results[0].geometry.location;
-              bounds.extend(location);
-
-              var marker = new google.maps.Marker({
-                map: map,
-                position: location,
-                title: restaurant.name,
-              });
-
-              var infoWindow = new google.maps.InfoWindow({
-                content: `<h3>${restaurant.name}</h3><p>${restaurant.address}</p><p>${restaurant.timestamp}</p>`,
-              });
-
-              marker.addListener('click', function () {
-                infoWindow.open(map, marker);
-              });
-            } else {
-              console.error('Geocode failed for ' + restaurant.address + ': ' + status);
-            }
-
-            setTimeout(function () {
-              geocodeNext(index + 1);
-            }, 200);
-          });
-        }
-
-        geocodeNext(0);
-      }
-    </script>
-  </body>
+  <!-- Basic styling -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    #map {
+      height: 80vh;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Restaurant Map</h1>
+  <div id="map"></div>
+</body>
 </html>

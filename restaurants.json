@@ -1,67 +1,93 @@
 [
   {
-    "Restaurant Name": "The Harmony",
-    "Location": "G/F, 9-11 Chatham Court",
-    "Timestamp": "2024-09-09 16:19:17"
+    "Restaurant Name":"The Harmony",
+    "Location":"G\/F, 9-11 Chatham Court",
+    "Timestamp":"2024-09-09 16:19:17",
+    "Latitude":null,
+    "Longitude":null
   },
   {
-    "Restaurant Name": "PACIFIC COFFEE",
-    "Location": "Shop 02, G/F, Harmony Court, 129 Bonham Strand",
-    "Timestamp": "2024-09-09 16:19:17"
+    "Restaurant Name":"PACIFIC COFFEE",
+    "Location":"Shop 02, G\/F, Harmony Court, 129 Bonham Strand",
+    "Timestamp":"2024-09-09 16:19:17",
+    "Latitude":22.2863648,
+    "Longitude":114.1504885
   },
   {
-    "Restaurant Name": "The Harmony",
-    "Location": "LG2/F, Lee Woo Sing College, The Chinese University of Hong Kong",
-    "Timestamp": "2024-09-09 16:19:17"
+    "Restaurant Name":"The Harmony",
+    "Location":"LG2\/F, Lee Woo Sing College, The Chinese University of Hong Kong",
+    "Timestamp":"2024-09-09 16:19:17",
+    "Latitude":22.419625,
+    "Longitude":114.2067606
   },
   {
-    "Restaurant Name": "Hea Ha Hea Ha 居酒屋",
-    "Location": "9/F, 10 Prat Avenue",
-    "Timestamp": "2024-09-09 16:19:17"
+    "Restaurant Name":"Hea Ha Hea Ha 居酒屋",
+    "Location":"9\/F, 10 Prat Avenue",
+    "Timestamp":"2024-09-09 16:19:17",
+    "Latitude":22.298674,
+    "Longitude":114.174461
   },
   {
-    "Restaurant Name": "Harmony Chinese Cuisine",
-    "Location": "Shop 106, 1/F, CDW Place, CDW Building, 388 Castle Peak Road - Tsuen Wan",
-    "Timestamp": "2024-09-09 16:19:17"
+    "Restaurant Name":"Harmony Chinese Cuisine",
+    "Location":"Shop 106, 1\/F, CDW Place, CDW Building, 388 Castle Peak Road - Tsuen Wan",
+    "Timestamp":"2024-09-09 16:19:17",
+    "Latitude":22.3754169,
+    "Longitude":114.1131415
   },
   {
-    "Restaurant Name": "Yakiniku Horumon Matchan",
-    "Location": "G/F, 24 Gough Street",
-    "Timestamp": "2024-09-09 16:19:17"
+    "Restaurant Name":"Yakiniku Horumon Matchan",
+    "Location":"G\/F, 24 Gough Street",
+    "Timestamp":"2024-09-09 16:19:17",
+    "Latitude":22.2841379,
+    "Longitude":114.1524859
   },
   {
-    "Restaurant Name": "Reiwa ShabuShabu & Sake",
-    "Location": "G/F-1/F, Luxury Court, 9 Hau Fook Street",
-    "Timestamp": "2024-09-09 16:19:17"
+    "Restaurant Name":"Reiwa ShabuShabu & Sake",
+    "Location":"G\/F-1\/F, Luxury Court, 9 Hau Fook Street",
+    "Timestamp":"2024-09-09 16:19:17",
+    "Latitude":22.2996782,
+    "Longitude":114.1742878
   },
   {
-    "Restaurant Name": "DAY22 STEAK",
-    "Location": "Shop 3, G/F, Block 2, Harmony Garden, 28 Luen Yan Street",
-    "Timestamp": "2024-09-09 16:19:17"
+    "Restaurant Name":"DAY22 STEAK",
+    "Location":"Shop 3, G\/F, Block 2, Harmony Garden, 28 Luen Yan Street",
+    "Timestamp":"2024-09-09 16:19:17",
+    "Latitude":22.3677347,
+    "Longitude":114.1173433
   },
   {
-    "Restaurant Name": "One O One",
-    "Location": "Shop A9, G/F, Fook Cheong Building, 63 Hoi Yuen Road",
-    "Timestamp": "2024-09-09 16:19:17"
+    "Restaurant Name":"One O One",
+    "Location":"Shop A9, G\/F, Fook Cheong Building, 63 Hoi Yuen Road",
+    "Timestamp":"2024-09-09 16:19:17",
+    "Latitude":null,
+    "Longitude":null
   },
   {
-    "Restaurant Name": "大業車仔麵",
-    "Location": "G/F, 8 Yau Man Street",
-    "Timestamp": "2024-09-09 16:19:17"
+    "Restaurant Name":"大業車仔麵",
+    "Location":"G\/F, 8 Yau Man Street",
+    "Timestamp":"2024-09-09 16:19:17",
+    "Latitude":22.2844079,
+    "Longitude":114.2126678
   },
   {
-    "Restaurant Name": "Yakiniku Futago HK",
-    "Location": "Shop 14-16, G/F, 8 Minden Avenue",
-    "Timestamp": "2024-09-09 16:19:17"
+    "Restaurant Name":"Yakiniku Futago HK",
+    "Location":"Shop 14-16, G\/F, 8 Minden Avenue",
+    "Timestamp":"2024-09-09 16:19:17",
+    "Latitude":22.3193039,
+    "Longitude":114.1693611
   },
   {
-    "Restaurant Name": "The Cosmopolitan (Tak Shing Street)",
-    "Location": "Shop A & B, G/F, Hong Yuen Court, 1-5 Tak Shing Street",
-    "Timestamp": "2024-09-09 16:19:17"
+    "Restaurant Name":"The Cosmopolitan (Tak Shing Street)",
+    "Location":"Shop A & B, G\/F, Hong Yuen Court, 1-5 Tak Shing Street",
+    "Timestamp":"2024-09-09 16:19:17",
+    "Latitude":22.3039229,
+    "Longitude":114.1730205
   },
   {
-    "Restaurant Name": "Gwing Kee Roasted",
-    "Location": "Shop A, G/F, Anson House, 19 Lock Road",
-    "Timestamp": "2024-09-09 16:19:17"
+    "Restaurant Name":"Gwing Kee Roasted",
+    "Location":"Shop A, G\/F, Anson House, 19 Lock Road",
+    "Timestamp":"2024-09-09 16:19:17",
+    "Latitude":22.2972036,
+    "Longitude":114.1714547
   }
 ]
