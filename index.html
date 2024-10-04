@@ -17,12 +17,15 @@
       font-family: Arial, sans-serif;
       margin: 0;
     }
+
     #container {
       display: flex;
       height: 100vh;
     }
+
     #sidebar {
-      width: 300px;
+      height: inherit;
+      width: 250px;
       max-width: 80%;
       overflow-y: auto;
       background-color: #f7f7f7;
@@ -30,39 +33,24 @@
       box-sizing: border-box;
       transition: transform 0.3s ease;
       transform: translateX(0);
+      position: absolute;
+      height: 100%;
+      z-index: 2;
     }
+
     #sidebar.collapsed {
       transform: translateX(-100%);
     }
+
     #map {
       flex: 1;
     }
-    .restaurant-item {
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-      cursor: pointer;
-    }
-    .restaurant-item:hover {
-      background-color: #eaeaea;
-    }
-    .restaurant-name {
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-    .restaurant-address {
-      font-size: 0.9em;
-      color: #555;
-    }
-    .error-message {
-      color: red;
-      padding: 10px;
-    }
-    /* Toggle button styles */
+
     #toggle-button {
       position: absolute;
       top: 10px;
       left: 10px;
-      z-index: 1;
+      z-index: 3; /* Ensure the button is on top */
       background-color: #fff;
       border: none;
       padding: 10px;
@@ -71,7 +59,12 @@
       border-radius: 4px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
-    /* Adjustments for small screens */
+
+    /* Move the toggle button when the sidebar is open */
+    #sidebar:not(.collapsed) ~ #toggle-button {
+      left: 310px; /* Adjust as needed */
+    }
+
     @media (max-width: 768px) {
       #container {
         flex-direction: column;
@@ -85,14 +78,46 @@
         flex: none;
         height: 100vh;
       }
+      #sidebar:not(.collapsed) ~ #toggle-button {
+        left: calc(80% + 10px);
+      }
     }
+
+    .restaurant-item {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+    }
+
+    .restaurant-item:hover {
+      background-color: #eaeaea;
+    }
+
+    .restaurant-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .restaurant-address {
+      font-size: 0.9em;
+      color: #555;
+    }
+
+    .error-message {
+      color: red;
+      padding: 10px;
+    }
+
+    
   </style>
 </head>
 <body>
   <div id="container">
     <button id="toggle-button">☰ Menu</button>
     <div id="sidebar" class="collapsed">
-      <h2>Nearby Restaurants</h2>
+      <h2 style="text-align:right"> HKRIA</h2>
+      <h2></h2>
+      <h2> Nearby Restaurants</h2>
       <div id="restaurant-list"></div>
     </div>
     <div id="map"></div>
