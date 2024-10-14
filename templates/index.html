@@ -15,8 +15,22 @@
     let infoWindow;
     let markers = [];
     let heading = 0;
+    let restaurants = [];
+
+    // Fetch the restaurant data from the local JSON file
+    function loadRestaurants() {
+        fetch('restaurants.json')
+            .then(response => response.json())
+            .then(data => {
+                restaurants = data;
+            })
+            .catch(error => console.error('Error loading restaurant data:', error));
+    }
 
     function initMap() {
+        // Load restaurant data first
+        loadRestaurants();
+
         // Use HTML5 geolocation to get user's location
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
@@ -50,7 +64,7 @@
                     }
                 });
 
-                // Fetch nearby restaurants initially
+                // Display nearby restaurants
                 fetchNearbyRestaurants(userLocation);
 
                 // Update user location as they move
@@ -92,58 +106,83 @@
     }
 
     function fetchNearbyRestaurants(userLocation) {
-        fetch(`/nearby_restaurants?latitude=${userLocation.lat}&longitude=${userLocation.lng}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data) {
-                    const sidebarContent = document.getElementById('restaurant-list');
-                    sidebarContent.innerHTML = "";
+        const nearbyRestaurants = [];
 
-                    data.forEach((restaurant, index) => {
-                        let restaurantDiv = document.createElement('div');
-                        restaurantDiv.className = 'restaurant-item';
-                        restaurantDiv.innerHTML = `<div class="restaurant-name">${restaurant['Restaurant Name']}</div><div class="restaurant-address">${restaurant['Cuisines']} - Price Range: ${restaurant['Price_Range']}</div>`;
-                        sidebarContent.appendChild(restaurantDiv);
+        restaurants.forEach((restaurant) => {
+            const restaurantLocation = {
+                lat: restaurant.Latitude,
+                lng: restaurant.Longitude
+            };
+            const distance = calculateDistance(userLocation, restaurantLocation);
 
-                        let placeLocation = {
-                            lat: parseFloat(restaurant.Latitude),
-                            lng: parseFloat(restaurant.Longitude)
-                        };
+            if (distance <= 100) {
+                nearbyRestaurants.push(restaurant);
+            }
+        });
 
-                        let marker = new google.maps.Marker({
-                            position: placeLocation,
-                            map: map,
-                            title: restaurant['Restaurant Name']
-                        });
+        displayRestaurants(nearbyRestaurants);
+    }
 
-                        markers.push(marker);
+    function calculateDistance(loc1, loc2) {
+        const R = 6371000; // Radius of the Earth in meters
+        const dLat = (loc2.lat - loc1.lat) * Math.PI / 180;
+        const dLon = (loc2.lng - loc1.lng) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(loc1.lat * Math.PI / 180) * Math.cos(loc2.lat * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in meters
+    }
 
-                        // Add click event listener to marker to show detailed info
-                        let currentInfoWindow = new google.maps.InfoWindow({
-                            content: `<div><strong>${restaurant['Restaurant Name']}</strong><br>Cuisines: ${restaurant['Cuisines']}<br>Price Range: ${restaurant['Price_Range']}<br>District: ${restaurant['District']}</div>`
-                        });
+    function displayRestaurants(restaurants) {
+        const sidebarContent = document.getElementById('restaurant-list');
+        sidebarContent.innerHTML = "";
 
-                        marker.addListener('click', () => {
-                            if (infoWindow) {
-                                infoWindow.close();
-                            }
-                            infoWindow = currentInfoWindow;
-                            infoWindow.open(map, marker);
-                        });
+        markers.forEach(marker => marker.setMap(null));
+        markers = [];
 
-                        // Add click event listener to sidebar item
-                        restaurantDiv.addEventListener('click', () => {
-                            if (infoWindow) {
-                                infoWindow.close();
-                            }
-                            infoWindow = currentInfoWindow;
-                            infoWindow.open(map, marker);
-                            map.setCenter(marker.getPosition());
-                        });
-                    });
+        restaurants.forEach((restaurant) => {
+            let restaurantDiv = document.createElement('div');
+            restaurantDiv.className = 'restaurant-item';
+            restaurantDiv.innerHTML = `<div class="restaurant-name">${restaurant['Restaurant Name']}</div><div class="restaurant-address">${restaurant['Cuisines']} - Price Range: ${restaurant['Price_Range']}</div>`;
+            sidebarContent.appendChild(restaurantDiv);
+
+            let placeLocation = {
+                lat: parseFloat(restaurant.Latitude),
+                lng: parseFloat(restaurant.Longitude)
+            };
+
+            let marker = new google.maps.Marker({
+                position: placeLocation,
+                map: map,
+                title: restaurant['Restaurant Name']
+            });
+
+            markers.push(marker);
+
+            // Add click event listener to marker to show detailed info
+            let currentInfoWindow = new google.maps.InfoWindow({
+                content: `<div><strong>${restaurant['Restaurant Name']}</strong><br>Cuisines: ${restaurant['Cuisines']}<br>Price Range: ${restaurant['Price_Range']}<br>District: ${restaurant['District']}</div>`
+            });
+
+            marker.addListener('click', () => {
+                if (infoWindow) {
+                    infoWindow.close();
                 }
-            })
-            .catch(error => console.error('Error fetching nearby restaurants:', error));
+                infoWindow = currentInfoWindow;
+                infoWindow.open(map, marker);
+            });
+
+            // Add click event listener to sidebar item
+            restaurantDiv.addEventListener('click', () => {
+                if (infoWindow) {
+                    infoWindow.close();
+                }
+                infoWindow = currentInfoWindow;
+                infoWindow.open(map, marker);
+                map.setCenter(marker.getPosition());
+            });
+        });
     }
 
     window.onload = () => {
