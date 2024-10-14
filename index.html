@@ -144,7 +144,7 @@
         restaurants.forEach((restaurant) => {
             let restaurantDiv = document.createElement('div');
             restaurantDiv.className = 'restaurant-item';
-            restaurantDiv.innerHTML = `<div class="restaurant-name">${restaurant['Restaurant Name']}</div><div class="restaurant-address">${restaurant['Cuisines']} - Price Range: ${restaurant['Price Range']}</div>`;
+            restaurantDiv.innerHTML = `<div class="restaurant-name">${restaurant['Restaurant Name']}</div><div class="restaurant-address">${restaurant['Cuisines']} <br></br> - Price Range: ${restaurant['Price Range']}</div>`;
             sidebarContent.appendChild(restaurantDiv);
 
             let placeLocation = {
@@ -299,7 +299,7 @@
     <div id="sidebar" class="collapsed">
       <h2 style="text-align:right"> HKRIA</h2>
       <h2></h2>
-      <h2> Nearby Restaurants</h2>
+      <h3> Nearby Restaurants</h3>
       <div id="restaurant-list"></div>
     </div>
     <div id="map"></div>
