@@ -17,6 +17,9 @@
     let heading = 0;
     let restaurants = [];
     let searchRadius = 100; // Default search radius in meters
+    let currentOpenInfoWindow = null;
+    let lastUpdateTime = 0;
+    const UPDATE_INTERVAL = 5000; // Minimum interval between updates in milliseconds
 
     // Fetch the restaurant data from the local JSON file
     function loadRestaurants() {
@@ -70,26 +73,31 @@
 
                 // Update user location as they move
                 navigator.geolocation.watchPosition((newPosition) => {
-                    const newUserLocation = {
-                        lat: newPosition.coords.latitude,
-                        lng: newPosition.coords.longitude
-                    };
+                    const currentTime = Date.now();
+                    if (currentTime - lastUpdateTime > UPDATE_INTERVAL) {
+                        lastUpdateTime = currentTime;
 
-                    heading = newPosition.coords.heading || heading;
-                    userMarker.setPosition(newUserLocation);
-                    userMarker.setIcon({
-                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                        scale: 5,
-                        rotation: heading,
-                        fillColor: "#4285F4",
-                        fillOpacity: 1,
-                        strokeWeight: 2,
-                        strokeColor: "#ffffff"
-                    });
-                    map.setCenter(newUserLocation);
+                        const newUserLocation = {
+                            lat: newPosition.coords.latitude,
+                            lng: newPosition.coords.longitude
+                        };
 
-                    // Fetch nearby restaurants for the new position
-                    fetchNearbyRestaurants(newUserLocation);
+                        heading = newPosition.coords.heading || heading;
+                        userMarker.setPosition(newUserLocation);
+                        userMarker.setIcon({
+                            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                            scale: 5,
+                            rotation: heading,
+                            fillColor: "#4285F4",
+                            fillOpacity: 1,
+                            strokeWeight: 2,
+                            strokeColor: "#ffffff"
+                        });
+                        map.setCenter(newUserLocation);
+
+                        // Fetch nearby restaurants for the new position
+                        fetchNearbyRestaurants(newUserLocation);
+                    }
                 });
             }, () => {
                 handleLocationError(true, map.getCenter());
@@ -167,20 +175,20 @@
             });
 
             marker.addListener('click', () => {
-                if (infoWindow) {
-                    infoWindow.close();
+                if (currentOpenInfoWindow) {
+                    currentOpenInfoWindow.close();
                 }
-                infoWindow = currentInfoWindow;
-                infoWindow.open(map, marker);
+                currentOpenInfoWindow = currentInfoWindow;
+                currentInfoWindow.open(map, marker);
             });
 
             // Add click event listener to sidebar item
             restaurantDiv.addEventListener('click', () => {
-                if (infoWindow) {
-                    infoWindow.close();
+                if (currentOpenInfoWindow) {
+                    currentOpenInfoWindow.close();
                 }
-                infoWindow = currentInfoWindow;
-                infoWindow.open(map, marker);
+                currentOpenInfoWindow = currentInfoWindow;
+                currentInfoWindow.open(map, marker);
                 map.setCenter(marker.getPosition());
             });
         });
@@ -322,7 +330,6 @@
       padding: 10px;
     }
   </style>
-
 </head>
 <body>
 <div id="container">
@@ -338,6 +345,7 @@
       <option value="100">100 meters</option>
       <option value="200">200 meters</option>
       <option value="300">300 meters</option>
+      <option value="400">400 meters</option>
     </select>
   </div>
 </body>
