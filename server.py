@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-import pandas as pd
+import json
 import os
 from geopy.distance import geodesic
 
@@ -8,16 +8,13 @@ app = Flask(__name__)
 # Replace with your Google Maps API key
 GOOGLE_MAPS_API_KEY = 'AIzaSyCK2tZwA7IQM_uKCg527Sr2hyLd8eSo4QM'
 
-# Load restaurant data from Excel
-EXCEL_FILE_PATH = 'restaurants.xlsx'
-if os.path.exists(EXCEL_FILE_PATH):
-    df_restaurants = pd.read_excel(EXCEL_FILE_PATH)
-    df_restaurants = df_restaurants.dropna(subset=['Latitude', 'Longitude'])
-    df_restaurants['Latitude'] = pd.to_numeric(df_restaurants['Latitude'], errors='coerce')
-    df_restaurants['Longitude'] = pd.to_numeric(df_restaurants['Longitude'], errors='coerce')
-    df_restaurants = df_restaurants.dropna(subset=['Latitude', 'Longitude'])
+# Load restaurant data from JSON
+JSON_FILE_PATH = 'restaurants.json'
+if os.path.exists(JSON_FILE_PATH):
+    with open(JSON_FILE_PATH, 'r') as file:
+        df_restaurants = json.load(file)
 else:
-    df_restaurants = pd.DataFrame(columns=['Restaurant Name', 'Latitude', 'Longitude', 'District', 'Cuisines', 'Price_Range', 'Timestamp'])
+    df_restaurants = []
 
 @app.route('/')
 def index():
@@ -30,11 +27,11 @@ def nearby_restaurants():
     user_location = (latitude, longitude)
     nearby_restaurants = []
 
-    for _, row in df_restaurants.iterrows():
-        restaurant_location = (row['Latitude'], row['Longitude'])
+    for restaurant in df_restaurants:
+        restaurant_location = (restaurant['Latitude'], restaurant['Longitude'])
         distance = geodesic(user_location, restaurant_location).meters
         if distance <= 1000:
-            nearby_restaurants.append(row.to_dict())
+            nearby_restaurants.append(restaurant)
 
     # Debug log for nearby restaurants
     print(f"User Location: {user_location}")
