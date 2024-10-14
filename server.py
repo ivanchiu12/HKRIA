@@ -33,7 +33,7 @@ def nearby_restaurants():
     for _, row in df_restaurants.iterrows():
         restaurant_location = (row['Latitude'], row['Longitude'])
         distance = geodesic(user_location, restaurant_location).meters
-        if distance <= 100:
+        if distance <= 1000:
             nearby_restaurants.append(row.to_dict())
 
     # Debug log for nearby restaurants
