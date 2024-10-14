@@ -11,8 +11,6 @@
   <script>
     let map;
     let userMarker;
-    let sidebar;
-    let infoWindow;
     let markers = [];
     let heading = 0;
     let restaurants = [];
@@ -22,200 +20,188 @@
     const UPDATE_INTERVAL = 5000; // Minimum interval between updates in milliseconds
 
     // Fetch the restaurant data from the local JSON file
-    function loadRestaurants() {
-        fetch('restaurants.json')
-            .then(response => response.json())
-            .then(data => {
-                restaurants = data;
-            })
-            .catch(error => console.error('Error loading restaurant data:', error));
+    async function loadRestaurants() {
+      try {
+        const response = await fetch('restaurants.json');
+        restaurants = await response.json();
+      } catch (error) {
+        console.error('Error loading restaurant data:', error);
+        document.getElementById('restaurant-list').innerHTML = '<div class="error-message">Error loading restaurant data. Please try again later.</div>';
+      }
     }
 
-    function initMap() {
-        // Load restaurant data first
-        loadRestaurants();
+    async function initMap() {
+      await loadRestaurants();
 
-        // Use HTML5 geolocation to get user's location
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                const userLocation = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const userLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
 
-                // Create the map centered at user's location
-                map = new google.maps.Map(document.getElementById('map'), {
-                    center: userLocation,
-                    zoom: 16,
-                    mapTypeControl: false,
-                    streetViewControl: false,
-                    fullscreenControl: false
-                });
+          // Create the map centered at user's location
+          map = new google.maps.Map(document.getElementById('map'), {
+            center: userLocation,
+            zoom: 16,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false
+          });
 
-                // Add a marker for user's location with direction
-                userMarker = new google.maps.Marker({
-                    position: userLocation,
-                    map: map,
-                    title: "You are here",
-                    icon: {
-                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                        scale: 5,
-                        rotation: heading,
-                        fillColor: "#4285F4",
-                        fillOpacity: 1,
-                        strokeWeight: 2,
-                        strokeColor: "#ffffff"
-                    }
-                });
+          // Add a marker for user's location
+          userMarker = new google.maps.Marker({
+            position: userLocation,
+            map: map,
+            title: "You are here",
+            icon: {
+              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+              scale: 5,
+              rotation: heading,
+              fillColor: "#4285F4",
+              fillOpacity: 1,
+              strokeWeight: 2,
+              strokeColor: "#ffffff"
+            }
+          });
 
-                // Display nearby restaurants
-                fetchNearbyRestaurants(userLocation);
+          fetchNearbyRestaurants(userLocation);
 
-                // Update user location as they move
-                navigator.geolocation.watchPosition((newPosition) => {
-                    const currentTime = Date.now();
-                    if (currentTime - lastUpdateTime > UPDATE_INTERVAL) {
-                        lastUpdateTime = currentTime;
+          // Debounced location update
+          navigator.geolocation.watchPosition(debounce((newPosition) => {
+            const currentTime = Date.now();
+            if (currentTime - lastUpdateTime > UPDATE_INTERVAL) {
+              lastUpdateTime = currentTime;
 
-                        const newUserLocation = {
-                            lat: newPosition.coords.latitude,
-                            lng: newPosition.coords.longitude
-                        };
+              const newUserLocation = {
+                lat: newPosition.coords.latitude,
+                lng: newPosition.coords.longitude
+              };
 
-                        heading = newPosition.coords.heading || heading;
-                        userMarker.setPosition(newUserLocation);
-                        userMarker.setIcon({
-                            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                            scale: 5,
-                            rotation: heading,
-                            fillColor: "#4285F4",
-                            fillOpacity: 1,
-                            strokeWeight: 2,
-                            strokeColor: "#ffffff"
-                        });
-                        map.setCenter(newUserLocation);
+              heading = newPosition.coords.heading || heading;
+              userMarker.setPosition(newUserLocation);
+              map.setCenter(newUserLocation);
 
-                        // Fetch nearby restaurants for the new position
-                        fetchNearbyRestaurants(newUserLocation);
-                    }
-                });
-            }, () => {
-                handleLocationError(true, map.getCenter());
-            });
-        } else {
-            // Browser doesn't support Geolocation
-            handleLocationError(false, map.getCenter());
-        }
+              fetchNearbyRestaurants(newUserLocation);
+            }
+          }, 1000));
+        }, () => {
+          handleLocationError(true);
+        });
+      } else {
+        handleLocationError(false);
+      }
     }
 
-    function handleLocationError(browserHasGeolocation, pos) {
-        alert(browserHasGeolocation ?
-            "Error: The Geolocation service failed." :
-            "Error: Your browser doesn't support geolocation.");
+    function handleLocationError(browserHasGeolocation) {
+      const errorMessage = browserHasGeolocation ?
+        "The Geolocation service failed. Please allow location access." :
+        "Your browser doesn't support geolocation.";
+      document.getElementById('restaurant-list').innerHTML = `<div class="error-message">${errorMessage}</div>`;
     }
 
     function fetchNearbyRestaurants(userLocation) {
-        const nearbyRestaurants = [];
+      const nearbyRestaurants = restaurants.filter((restaurant) => {
+        const restaurantLocation = {
+          lat: restaurant.Latitude,
+          lng: restaurant.Longitude
+        };
+        return calculateDistance(userLocation, restaurantLocation) <= searchRadius;
+      });
 
-        restaurants.forEach((restaurant) => {
-            const restaurantLocation = {
-                lat: restaurant.Latitude,
-                lng: restaurant.Longitude
-            };
-            const distance = calculateDistance(userLocation, restaurantLocation);
-
-            if (distance <= searchRadius) {
-                nearbyRestaurants.push(restaurant);
-            }
-        });
-
-        displayRestaurants(nearbyRestaurants);
+      displayRestaurants(nearbyRestaurants);
     }
 
     function calculateDistance(loc1, loc2) {
-        const R = 6371000; // Radius of the Earth in meters
-        const dLat = (loc2.lat - loc1.lat) * Math.PI / 180;
-        const dLon = (loc2.lng - loc1.lng) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(loc1.lat * Math.PI / 180) * Math.cos(loc2.lat * Math.PI / 180) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c; // Distance in meters
+      const R = 6371000; // Radius of the Earth in meters
+      const dLat = (loc2.lat - loc1.lat) * Math.PI / 180;
+      const dLon = (loc2.lng - loc1.lng) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(loc1.lat * Math.PI / 180) * Math.cos(loc2.lat * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c; // Distance in meters
     }
 
     function displayRestaurants(restaurants) {
-        const sidebarContent = document.getElementById('restaurant-list');
-        sidebarContent.innerHTML = "";
+      const sidebarContent = document.getElementById('restaurant-list');
+      sidebarContent.innerHTML = "";
 
-        markers.forEach(marker => marker.setMap(null));
-        markers = [];
+      markers.forEach(marker => marker.setMap(null));
+      markers = [];
 
-        restaurants.forEach((restaurant) => {
-            let restaurantDiv = document.createElement('div');
-            restaurantDiv.className = 'restaurant-item';
-            restaurantDiv.innerHTML = `<div class="restaurant-name">${restaurant['Restaurant Name']}</div><div class="restaurant-address">${restaurant['Cuisines']} <br></br> - Price Range: ${restaurant['Price Range']}</div>`;
-            sidebarContent.appendChild(restaurantDiv);
+      restaurants.forEach((restaurant) => {
+        let restaurantDiv = document.createElement('div');
+        restaurantDiv.className = 'restaurant-item';
+        restaurantDiv.innerHTML = `<div class="restaurant-name">${restaurant['Restaurant Name']}</div><div class="restaurant-address">${restaurant['Cuisines']} <br> - Price Range: ${restaurant['Price Range']}</div>`;
+        sidebarContent.appendChild(restaurantDiv);
 
-            let placeLocation = {
-                lat: parseFloat(restaurant.Latitude),
-                lng: parseFloat(restaurant.Longitude)
-            };
+        let placeLocation = {
+          lat: parseFloat(restaurant.Latitude),
+          lng: parseFloat(restaurant.Longitude)
+        };
 
-            let marker = new google.maps.Marker({
-                position: placeLocation,
-                map: map,
-                title: restaurant['Restaurant Name']
-            });
-
-            markers.push(marker);
-
-            // Add click event listener to marker to show detailed info
-            let currentInfoWindow = new google.maps.InfoWindow({
-                content: `<div><strong>${restaurant['Restaurant Name']}</strong><br>Cuisines: ${restaurant['Cuisines']}<br>Price Range: ${restaurant['Price Range']}<br>Location: ${restaurant['Location']}</div>`
-            });
-
-            marker.addListener('click', () => {
-                if (currentOpenInfoWindow) {
-                    currentOpenInfoWindow.close();
-                }
-                currentOpenInfoWindow = currentInfoWindow;
-                currentInfoWindow.open(map, marker);
-            });
-
-            // Add click event listener to sidebar item
-            restaurantDiv.addEventListener('click', () => {
-                if (currentOpenInfoWindow) {
-                    currentOpenInfoWindow.close();
-                }
-                currentOpenInfoWindow = currentInfoWindow;
-                currentInfoWindow.open(map, marker);
-                map.setCenter(marker.getPosition());
-            });
+        let marker = new google.maps.Marker({
+          position: placeLocation,
+          map: map,
+          title: restaurant['Restaurant Name']
         });
+
+        markers.push(marker);
+
+        let currentInfoWindow = new google.maps.InfoWindow({
+          content: `<div><strong>${restaurant['Restaurant Name']}</strong><br>Cuisines: ${restaurant['Cuisines']}<br>Price Range: ${restaurant['Price Range']}<br>Location: ${restaurant['Location']}</div>`
+        });
+
+        marker.addListener('click', () => {
+          if (currentOpenInfoWindow) {
+            currentOpenInfoWindow.close();
+          }
+          currentOpenInfoWindow = currentInfoWindow;
+          currentInfoWindow.open(map, marker);
+        });
+
+        restaurantDiv.addEventListener('click', () => {
+          if (currentOpenInfoWindow) {
+            currentOpenInfoWindow.close();
+          }
+          currentOpenInfoWindow = currentInfoWindow;
+          currentInfoWindow.open(map, marker);
+          map.setCenter(marker.getPosition());
+        });
+      });
+    }
+
+    function debounce(func, wait) {
+      let timeout;
+      return function (...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+      };
     }
 
     window.onload = () => {
-        initMap();
-        const toggleButton = document.getElementById("toggle-button");
-        const sidebar = document.getElementById("sidebar");
-        toggleButton.addEventListener("click", () => {
-            sidebar.classList.toggle("collapsed");
-        });
+      initMap();
+      const toggleButton = document.getElementById("toggle-button");
+      const sidebar = document.getElementById("sidebar");
+      toggleButton.addEventListener("click", () => {
+        sidebar.classList.toggle("collapsed");
+      });
 
-        // Add event listener for radius selection
-        const radiusSelect = document.getElementById("radius-select");
-        radiusSelect.addEventListener("change", (event) => {
-            searchRadius = parseInt(event.target.value);
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((position) => {
-                    const userLocation = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    };
-                    fetchNearbyRestaurants(userLocation);
-                });
-            }
-        });
+      const radiusSelect = document.getElementById("radius-select");
+      radiusSelect.addEventListener("change", (event) => {
+        searchRadius = parseInt(event.target.value);
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition((position) => {
+            const userLocation = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            fetchNearbyRestaurants(userLocation);
+          });
+        }
+      });
     };
   </script>
 
