@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Restaurant Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Maps JavaScript API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}" defer></script>
+
+  <script>
+    let map;
+    let userMarker;
+    let sidebar;
+    let infoWindow;
+    let markers = [];
+    let heading = 0;
+
+    function initMap() {
+        // Use HTML5 geolocation to get user's location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+
+                // Create the map centered at user's location
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: userLocation,
+                    zoom: 16,
+                    mapTypeControl: false,
+                    streetViewControl: false,
+                    fullscreenControl: false
+                });
+
+                // Add a marker for user's location with direction
+                userMarker = new google.maps.Marker({
+                    position: userLocation,
+                    map: map,
+                    title: "You are here",
+                    icon: {
+                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                        scale: 5,
+                        rotation: heading,
+                        fillColor: "#4285F4",
+                        fillOpacity: 1,
+                        strokeWeight: 2,
+                        strokeColor: "#ffffff"
+                    }
+                });
+
+                // Fetch nearby restaurants initially
+                fetchNearbyRestaurants(userLocation);
+
+                // Update user location as they move
+                navigator.geolocation.watchPosition((newPosition) => {
+                    const newUserLocation = {
+                        lat: newPosition.coords.latitude,
+                        lng: newPosition.coords.longitude
+                    };
+
+                    heading = newPosition.coords.heading || heading;
+                    userMarker.setPosition(newUserLocation);
+                    userMarker.setIcon({
+                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                        scale: 5,
+                        rotation: heading,
+                        fillColor: "#4285F4",
+                        fillOpacity: 1,
+                        strokeWeight: 2,
+                        strokeColor: "#ffffff"
+                    });
+                    map.setCenter(newUserLocation);
+
+                    // Fetch nearby restaurants for the new position
+                    fetchNearbyRestaurants(newUserLocation);
+                });
+            }, () => {
+                handleLocationError(true, map.getCenter());
+            });
+        } else {
+            // Browser doesn't support Geolocation
+            handleLocationError(false, map.getCenter());
+        }
+    }
+
+    function handleLocationError(browserHasGeolocation, pos) {
+        alert(browserHasGeolocation ?
+            "Error: The Geolocation service failed." :
+            "Error: Your browser doesn't support geolocation.");
+    }
+
+    function fetchNearbyRestaurants(userLocation) {
+        fetch(`/nearby_restaurants?latitude=${userLocation.lat}&longitude=${userLocation.lng}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data) {
+                    const sidebarContent = document.getElementById('restaurant-list');
+                    sidebarContent.innerHTML = "";
+
+                    data.forEach((restaurant, index) => {
+                        let restaurantDiv = document.createElement('div');
+                        restaurantDiv.className = 'restaurant-item';
+                        restaurantDiv.innerHTML = `<div class="restaurant-name">${restaurant['Restaurant Name']}</div><div class="restaurant-address">${restaurant['Cuisines']} - Price Range: ${restaurant['Price_Range']}</div>`;
+                        sidebarContent.appendChild(restaurantDiv);
+
+                        let placeLocation = {
+                            lat: parseFloat(restaurant.Latitude),
+                            lng: parseFloat(restaurant.Longitude)
+                        };
+
+                        let marker = new google.maps.Marker({
+                            position: placeLocation,
+                            map: map,
+                            title: restaurant['Restaurant Name']
+                        });
+
+                        markers.push(marker);
+
+                        // Add click event listener to marker to show detailed info
+                        let currentInfoWindow = new google.maps.InfoWindow({
+                            content: `<div><strong>${restaurant['Restaurant Name']}</strong><br>Cuisines: ${restaurant['Cuisines']}<br>Price Range: ${restaurant['Price_Range']}<br>District: ${restaurant['District']}</div>`
+                        });
+
+                        marker.addListener('click', () => {
+                            if (infoWindow) {
+                                infoWindow.close();
+                            }
+                            infoWindow = currentInfoWindow;
+                            infoWindow.open(map, marker);
+                        });
+
+                        // Add click event listener to sidebar item
+                        restaurantDiv.addEventListener('click', () => {
+                            if (infoWindow) {
+                                infoWindow.close();
+                            }
+                            infoWindow = currentInfoWindow;
+                            infoWindow.open(map, marker);
+                            map.setCenter(marker.getPosition());
+                        });
+                    });
+                }
+            })
+            .catch(error => console.error('Error fetching nearby restaurants:', error));
+    }
+
+    window.onload = () => {
+        initMap();
+        const toggleButton = document.getElementById("toggle-button");
+        const sidebar = document.getElementById("sidebar");
+        toggleButton.addEventListener("click", () => {
+            sidebar.classList.toggle("collapsed");
+        });
+    };
+  </script>
+
+  <!-- Styles -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+    }
+
+    #container {
+      display: flex;
+      height: 100vh;
+    }
+
+    #sidebar {
+      height: inherit;
+      width: 250px;
+      max-width: 80%;
+      overflow-y: auto;
+      background-color: #f7f7f7;
+      padding: 10px;
+      box-sizing: border-box;
+      transition: transform 0.3s ease;
+      transform: translateX(0);
+      position: absolute;
+      height: 100%;
+      z-index: 2;
+    }
+
+    #sidebar.collapsed {
+      transform: translateX(-100%);
+    }
+
+    #map {
+      flex: 1;
+    }
+
+    #toggle-button {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 3; /* Ensure the button is on top */
+      background-color: #fff;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    /* Move the toggle button when the sidebar is open */
+    #sidebar:not(.collapsed) ~ #toggle-button {
+      left: 310px; /* Adjust as needed */
+    }
+
+    @media (max-width: 768px) {
+      #container {
+        flex-direction: column;
+      }
+      #sidebar {
+        position: absolute;
+        height: 100%;
+        z-index: 2;
+      }
+      #map {
+        flex: none;
+        height: 100vh;
+      }
+      #sidebar:not(.collapsed) ~ #toggle-button {
+        left: calc(80% + 10px);
+      }
+    }
+
+    .restaurant-item {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+    }
+
+    .restaurant-item:hover {
+      background-color: #eaeaea;
+    }
+
+    .restaurant-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .restaurant-address {
+      font-size: 0.9em;
+      color: #555;
+    }
+
+    .error-message {
+      color: red;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+<div id="container">
+    <button id="toggle-button">☰ Menu</button>
+    <div id="sidebar" class="collapsed">
+      <h2 style="text-align:right"> HKRIA</h2>
+      <h2></h2>
+      <h2> Nearby Restaurants</h2>
+      <div id="restaurant-list"></div>
+    </div>
+    <div id="map"></div>
+  </div>
+</body>
+</html>
