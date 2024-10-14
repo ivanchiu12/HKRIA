@@ -144,7 +144,7 @@
         restaurants.forEach((restaurant) => {
             let restaurantDiv = document.createElement('div');
             restaurantDiv.className = 'restaurant-item';
-            restaurantDiv.innerHTML = `<div class="restaurant-name">${restaurant['Restaurant Name']}</div><div class="restaurant-address">${restaurant['Cuisines']} - Price Range: ${restaurant['Price_Range']}</div>`;
+            restaurantDiv.innerHTML = `<div class="restaurant-name">${restaurant['Restaurant Name']}</div><div class="restaurant-address">${restaurant['Cuisines']} - Price Range: ${restaurant['Price Range']}</div>`;
             sidebarContent.appendChild(restaurantDiv);
 
             let placeLocation = {
@@ -162,7 +162,7 @@
 
             // Add click event listener to marker to show detailed info
             let currentInfoWindow = new google.maps.InfoWindow({
-                content: `<div><strong>${restaurant['Restaurant Name']}</strong><br>Cuisines: ${restaurant['Cuisines']}<br>Price Range: ${restaurant['Price_Range']}<br>District: ${restaurant['District']}</div>`
+                content: `<div><strong>${restaurant['Restaurant Name']}</strong><br>Cuisines: ${restaurant['Cuisines']}<br>Price Range: ${restaurant['Price Range']}<br>Location: ${restaurant['Location']}</div>`
             });
 
             marker.addListener('click', () => {
