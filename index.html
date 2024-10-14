@@ -16,6 +16,7 @@
     let markers = [];
     let heading = 0;
     let restaurants = [];
+    let searchRadius = 100; // Default search radius in meters
 
     // Fetch the restaurant data from the local JSON file
     function loadRestaurants() {
@@ -115,7 +116,7 @@
             };
             const distance = calculateDistance(userLocation, restaurantLocation);
 
-            if (distance <= 1000) {
+            if (distance <= searchRadius) {
                 nearbyRestaurants.push(restaurant);
             }
         });
@@ -192,6 +193,21 @@
         toggleButton.addEventListener("click", () => {
             sidebar.classList.toggle("collapsed");
         });
+
+        // Add event listener for radius selection
+        const radiusSelect = document.getElementById("radius-select");
+        radiusSelect.addEventListener("change", (event) => {
+            searchRadius = parseInt(event.target.value);
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    fetchNearbyRestaurants(userLocation);
+                });
+            }
+        });
     };
   </script>
 
@@ -235,6 +251,20 @@
       top: 10px;
       left: 10px;
       z-index: 3; /* Ensure the button is on top */
+      background-color: #fff;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    #radius-select {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 3;
       background-color: #fff;
       border: none;
       padding: 10px;
@@ -303,6 +333,11 @@
       <div id="restaurant-list"></div>
     </div>
     <div id="map"></div>
+    <select id="radius-select">
+      <option value="100">100 meters</option>
+      <option value="200">200 meters</option>
+      <option value="300">300 meters</option>
+    </select>
   </div>
 </body>
 </html>
