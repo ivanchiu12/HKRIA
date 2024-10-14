@@ -16,6 +16,7 @@
     let restaurants = [];
     let searchRadius = 100; // Default search radius in meters
     let currentOpenInfoWindow = null;
+    let infoWindowOpen = false; // Add a flag to track the state of the info window
     let lastUpdateTime = 0;
     const UPDATE_INTERVAL = 5000; // Minimum interval between updates in milliseconds
 
@@ -80,7 +81,10 @@
 
               heading = newPosition.coords.heading || heading;
               userMarker.setPosition(newUserLocation);
-              map.setCenter(newUserLocation);
+              
+              if (!infoWindowOpen) {
+                map.setCenter(newUserLocation);
+              }
 
               fetchNearbyRestaurants(newUserLocation);
             }
@@ -159,6 +163,7 @@
           }
           currentOpenInfoWindow = currentInfoWindow;
           currentInfoWindow.open(map, marker);
+          infoWindowOpen = true;
         });
 
         restaurantDiv.addEventListener('click', () => {
@@ -168,6 +173,11 @@
           currentOpenInfoWindow = currentInfoWindow;
           currentInfoWindow.open(map, marker);
           map.setCenter(marker.getPosition());
+          infoWindowOpen = true;
+        });
+
+        currentInfoWindow.addListener('closeclick', () => {
+          infoWindowOpen = false;
         });
       });
     }
